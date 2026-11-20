@@ -28,6 +28,8 @@ import security
 from db import engine, get_session
 from erp_client import close_erp_client
 from erp_routes import router as erp_router
+from ingest_routes import router as ingest_router
+from kpi_routes import router as kpi_router
 from logging_config import setup_logging
 from ratelimit import enforce_limits, hit
 from redis_client import redis
@@ -49,6 +51,8 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="PME API Keys", lifespan=lifespan)
 app.include_router(erp_router)      # /v1/erp/*  (API-key auth + rate limits)
+app.include_router(kpi_router)      # /v1/kpi/*  (live KPIs from the ERP)
+app.include_router(ingest_router)   # /v1/ingest/*  (Excel/CSV upload, data-quality report)
 
 
 @app.middleware("http")

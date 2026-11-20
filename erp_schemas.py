@@ -68,7 +68,18 @@ def _decimal(places: int):
         if isinstance(v, str):
             s = re.sub(r"[^\d.,()\-+eE]", "", v)           # drop currency symbols / spaces
             neg = s.startswith("(") and s.endswith(")")     # accounting negative: (12.30)
-            s = s.strip("()").replace(",", "")              # assumes 1,234.50 style
+            s = s.strip("()")
+            if "," in s and "." in s:                       # last separator is the decimal one
+                dec = "," if s.rfind(",") > s.rfind(".") else "."
+                thou = "." if dec == "," else ","
+                s = s.replace(thou, "").replace(dec, ".")
+            elif "," in s:
+                if re.fullmatch(r"[+\-]?\d{1,3}(,\d{3})+", s):
+                    s = s.replace(",", "")                  # 1,234 / 1,234,567 -> thousands
+                elif s.count(",") == 1:
+                    s = s.replace(",", ".")                 # 1000,50 / 12,5 -> decimal comma
+                else:
+                    raise ValueError(f"ambiguous number: {v!r}")
             v = f"-{s}" if neg else s
         try:
             d = Decimal(str(v))
@@ -200,7 +211,7 @@ class ExportRow(BaseModel):
 # ==================== FIELD MAPPING  (edit the alias lists) ====================
 class InvoiceRow(ExportRow):
     id: Id = A("id", "invoice_id")
-    number: Text = A("number", "invoice_number", "name", "doc_no")
+    number: Text = A("number", "invoice_number", "invoice_no", "name", "doc_no")
     customer_id: IdOpt = O("customer_id", "partner_id", "customer")
     customer_name: TextOpt = O("customer_name", "partner_name", "partner_id", "customer")
     status: TextOpt = O("status", "state")
