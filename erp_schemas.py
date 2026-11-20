@@ -249,6 +249,49 @@ class CustomerRow(ExportRow):
     created_at: DateTimeOpt = O("created_at", "create_date")
 
 
+class SalesOrderRow(ExportRow):
+    id: Id = A("id", "order_id")
+    number: Text = A("number", "order_number", "order_no", "name")
+    customer_id: IdOpt = O("customer_id", "partner_id", "customer")
+    order_date: DateReq = A("order_date", "date_order", "date")
+    status: TextOpt = O("status", "state")
+    total: Money = A("total", "amount_total", "gross_amount")
+    cogs: MoneyOpt = O("cogs", "cost_of_goods_sold", "total_cost")
+    returned: BoolOpt = O("returned", "is_returned", "has_return")
+    updated_at: DateTimeOpt = O("updated_at", "write_date", "modified_at")
+
+
+class PurchaseOrderRow(ExportRow):
+    id: Id = A("id", "purchase_order_id", "po_id")
+    number: Text = A("number", "po_number", "po_no", "name")
+    supplier_id: IdOpt = O("supplier_id", "partner_id", "vendor_id", "supplier")
+    supplier_name: TextOpt = O("supplier_name", "vendor_name", "partner_id", "supplier")
+    order_date: DateReq = A("order_date", "date_order", "date")
+    promised_date: DateOpt = O("promised_date", "date_planned", "expected_date", "due_date")
+    received_date: DateOpt = O("received_date", "date_received", "date_done", "delivery_date")
+    status: TextOpt = O("status", "state")
+    quantity_ordered: QtyOpt = O("quantity_ordered", "qty_ordered", "product_qty")
+    quantity_received: QtyOpt = O("quantity_received", "qty_received")
+    unit_price: MoneyOpt = O("unit_price", "price_unit", "actual_price")
+    standard_price: MoneyOpt = O("standard_price", "std_price", "reference_price")
+    updated_at: DateTimeOpt = O("updated_at", "write_date", "modified_at")
+
+
+class ProductionOrderRow(ExportRow):
+    id: Id = A("id", "production_order_id", "mo_id")
+    number: Text = A("number", "mo_number", "mo_no", "name")
+    product_id: IdOpt = O("product_id", "product", "sku")
+    status: TextOpt = O("status", "state")
+    start_date: DateReq = A("start_date", "date_start", "date_planned_start", "date")
+    end_date: DateOpt = O("end_date", "date_finished", "date_end")
+    planned_quantity: Qty = A("planned_quantity", "product_qty", "qty_planned")
+    produced_quantity: QtyOpt = O("produced_quantity", "qty_produced", "quantity_done")
+    defective_quantity: QtyOpt = O("defective_quantity", "qty_defective", "scrap_qty")
+    standard_hours: QtyOpt = O("standard_hours", "planned_hours", "std_hours")
+    actual_hours: QtyOpt = O("actual_hours", "worked_hours", "duration_hours")
+    updated_at: DateTimeOpt = O("updated_at", "write_date", "modified_at")
+
+
 # ============== resources: URL path on the ERP + how filters map to ERP params ==============
 @dataclass(frozen=True)
 class Resource:
@@ -269,5 +312,14 @@ RESOURCES: dict[str, Resource] = {
     "inventory": Resource("inventory", "/api/inventory", InventoryRow, {
         "updated_since": "updated_since"}),
     "customers": Resource("customers", "/api/customers", CustomerRow, {
+        "updated_since": "updated_since", "status": "status"}),
+    "sales_orders": Resource("sales_orders", "/api/sales-orders", SalesOrderRow, {
+        "date_from": "date_from", "date_to": "date_to",
+        "updated_since": "updated_since", "status": "status"}),
+    "purchase_orders": Resource("purchase_orders", "/api/purchase-orders", PurchaseOrderRow, {
+        "date_from": "date_from", "date_to": "date_to",
+        "updated_since": "updated_since", "status": "status"}),
+    "production_orders": Resource("production_orders", "/api/production-orders", ProductionOrderRow, {
+        "date_from": "date_from", "date_to": "date_to",
         "updated_since": "updated_since", "status": "status"}),
 }
