@@ -26,6 +26,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import security
 from db import engine, get_session
+from erp_client import close_erp_client
+from erp_routes import router as erp_router
 from logging_config import setup_logging
 from ratelimit import enforce_limits, hit
 from redis_client import redis
@@ -40,11 +42,13 @@ async def lifespan(_: FastAPI):
     setup_logging()
     security.check_config()          # fail at startup if a secret is missing
     yield
+    await close_erp_client()
     await redis.aclose()
     await engine.dispose()
 
 
 app = FastAPI(title="PME API Keys", lifespan=lifespan)
+app.include_router(erp_router)      # /v1/erp/*  (API-key auth + rate limits)
 
 
 @app.middleware("http")
